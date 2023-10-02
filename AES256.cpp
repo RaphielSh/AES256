@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <string>
+#include <vector>
 using namespace std;
 
 
@@ -9,13 +11,14 @@ class AES{
         uint32_t word[60];
         uint8_t key[32];
         uint8_t plain[16];
-        uint8_t roundKey[15];
-        short int round;
+        uint8_t roundKey[15][16];
+        short int round = 0;
         const uint16_t reduce = 0b100011011;
         const uint16_t mag = 0b100000000;
+        uint8_t plain_m[16];
     public:
         AES(){};
-        
+
         uint8_t sBox(uint8_t byte){
             uint8_t s[256] ={
                 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -51,7 +54,7 @@ class AES{
             for(int i = 0; i < 16; i++)
                 plain[i] = bytes[i];
         }
-        
+
         //Functions
         uint32_t rotWord(uint32_t round_w){
             uint8_t a, b, c, d;
@@ -65,16 +68,16 @@ class AES{
             round_w = b << 24 | c << 16 | d << 8 | a;
             return round_w;
         }
-    
+
         void keyExpand(){
             uint8_t a,b,c,d;
             uint32_t tmp;
             //First 8 words
             for(int i = 0; i < 8; i++){
                 word[i] = key[4*i] << 24 | key[4*i+1] << 16 | key[4*i+2] << 8 | key[4*i+3];
-                cout << hex << word[i] << dec << endl;
+                //cout << "   ->Word[" << i << "] = " << hex << word[i] << dec << endl;
             }
-            
+
             //Making schedule of next 52 words
             for(int i = 8; i < 60; i++){
                 tmp = word[i-1];
@@ -100,8 +103,8 @@ class AES{
                 word[i] = word[i-8] ^ tmp;
                 //cout << "Word[" << i << "] = "<< hex(word[i]) << endl;
             }
-            
-            
+            initRoundKeys();
+
         }
 
         //  getRoundKey(int round){
@@ -128,69 +131,55 @@ class AES{
             // }
         // }
 
-        void currentRoundKey(int rnd){
+        void initRoundKeys(){
             uint32_t tmp;
             uint8_t a,b,c,d;
-            for(int i = rnd*4; i < rnd*4+4; i++){
-                tmp = word[i];
-                
+            for(int i = 0; i < 15; i++){
+                tmp = word[i*4];
                 a = tmp >> 24; b = tmp >> 16 & 0xff; c = tmp >> 8 & 0xff; d = tmp & 0xff;
-                roundKey[0] = a;
-                roundKey[1] = b;
-                roundKey[2] = c;
-                roundKey[3] = d;
-                tmp = word[i+1];
-                
+                roundKey[i][0] = a;
+                roundKey[i][1] = b;
+                roundKey[i][2] = c;
+                roundKey[i][3] = d;
+
+                tmp = word[i*4+1];
                 a = tmp >> 24; b = tmp >> 16 & 0xff; c = tmp >> 8 & 0xff; d = tmp & 0xff;
-                roundKey[4] = a;
-                roundKey[5] = b;
-                roundKey[6] = c;
-                roundKey[7] = d;
-                tmp = word[i+2];
-                
+                roundKey[i][4] = a;
+                roundKey[i][5] = b;
+                roundKey[i][6] = c;
+                roundKey[i][7] = d;
+
+                tmp = word[i*4+2];
                 a = tmp >> 24; b = tmp >> 16 & 0xff; c = tmp >> 8 & 0xff; d = tmp & 0xff;
-                roundKey[8] = a;
-                roundKey[9] = b;
-                roundKey[10] = c;
-                roundKey[11] = d;
-                tmp = word[i+3];
-                
+                roundKey[i][8] = a;
+                roundKey[i][9] = b;
+                roundKey[i][10] = c;
+                roundKey[i][11] = d;
+
+                tmp = word[i*4+3];
                 a = tmp >> 24; b = tmp >> 16 & 0xff; c = tmp >> 8 & 0xff; d = tmp & 0xff;
-                roundKey[12] = a;
-                roundKey[13] = b;
-                roundKey[14] = c;
-                roundKey[15] = d;
-                
+                roundKey[i][12] = a;
+                roundKey[i][13] = b;
+                roundKey[i][14] = c;
+                roundKey[i][15] = d;
             }
-            // for(int i = 0; i < 16; i++) 
-            //     cout << hex << roundKey[i];
-            // cout << "\nEND OF KEY" << endl;
         }
 
         void keyAdd(){
-            cout << "   Start of keyAdd cycle:" << endl;
             uint8_t tmp;
             short int count = 0;
+
             for(int i = 0; i < 16; i++){
-                // cout <<"    start of a XOR cycle"<< endl;
-                currentRoundKey(count);
-                cout << "plain num = " << plain[i] << "round key = "<<roundKey[i] << endl;
-                plain[i] ^= roundKey[i];
-                count++;
-                // print(plain);
+                //cout << "   ->plain num = " << hex(plain[i]) << " XOR round key = " << hex(roundKey[round][i]) << endl;
+                plain[i] ^= roundKey[round][i];
                 // cout <<"    End of a key add cycle"<< endl;
             }
-            //print(plain);
-            cout <<"    End of keyADD cycle"<< endl;
         }
         void subBytes(){
-            cout << "   Start of subBytes cycle:" << endl;
             for(int i = 0; i < 16; i++)
-                plain[i] = sBox(plain[i]);  
-            //print(plain); 
-        }
+                plain[i] = sBox(plain[i]);
+            }
         void shiftRows(){
-            cout << "   Start of shiftRows cycle:" << endl;
             uint8_t tmp;
             tmp = plain[1];
             plain[1] = plain[5];
@@ -210,10 +199,9 @@ class AES{
             plain[11] = plain[7];
             plain[7] = plain[3];
             plain[3] = tmp;
-            //print(plain); 
+            
         }
         void mixColumns(){
-            cout << "   Start of mix cycle:" << endl;
             uint16_t res;
             uint8_t a, b, c, d;
 
@@ -240,67 +228,87 @@ class AES{
                     res ^= reduce;
                 plain[3+i*4] = res;
             }
-            //print(plain); 
+
         }
         void runRound(){
+            //cout << "\nSubBytes: " << endl;
             subBytes();
+            //print(plain);
+            //cout << "\nShiftRows: " << endl;
             shiftRows();
+            //print(plain);
+            //cout << "\nmix cols: " << endl;
             mixColumns();
+            //print(plain);
+            //cout << "Current round key is: " << endl;
+            //printCurrRoundKey(round);
+            //cout << "\nkeyAdd: " << endl;
             keyAdd();
+            //print(plain);
         }
         void encrypt(){
-            
+            round = 0;
+            //cout << "First key Add: " << endl;
             keyAdd();
+            //print(plain);
             round = 1;
             for(int i = 1; i < 14; i++){
+                //cout << "Round " << i << endl;
                 runRound();
-                cout << "Round " << i << endl;
+                round++;
             }
+            //cout << "Last 14 round operations:" << endl;
             subBytes();
             shiftRows();
             keyAdd();
+            //print(plain);
             //printPlain();
+            cout << "\nEncrypted text: " << endl;
             for(int i = 0; i < 16; i++)
-                cout << plain[i];
+                cout << hex(plain[i]) <<  " ";
         }
 
         //Print Part
-        // std::string hex(unsigned char inchar){
-        //     std::ostringstream oss (std::ostringstream::out);
-        //     oss << std::setw(2) << std::setfill('0') << std::hex << (int)(inchar);
-        //     return oss.str();
-        // }
-        // void print(uint8_t byte){
-        //     std::cout << hex(byte);
-        // }
-        // void printBox(uint8_t * bytes)
-        // {
-        //     for (int i = 0; i < 4; i++)
-        //         std::cout << hex(bytes[i]) << ' ' << hex(bytes[i+4]) << ' '
-        //                 << hex(bytes[i+8]) << ' ' << hex(bytes[i+12]) << std::endl;
-        // }
+        std::string hex(unsigned char inchar){
+            std::ostringstream oss (std::ostringstream::out);
+            oss << std::setw(2) << std::setfill('0') << std::hex << (int)(inchar);
+            return oss.str();
+        }
+        void print(uint8_t byte){
+            std::cout << hex(byte);
+        }
+        void printBox(uint8_t * bytes)
+        {
+            for (int i = 0; i < 4; i++)
+                std::cout << hex(bytes[i]) << ' ' << hex(bytes[i+4]) << ' '
+                        << hex(bytes[i+8]) << ' ' << hex(bytes[i+12]) << std::endl;
+        }
 
-        // void print(uint8_t * bytes)
-        // {
-        //     printBox(bytes);
-        // }
-        // void printWords(){
-        //     for(int i = 0; i < 60; i++)
-        //         cout << "Word[" << i << "] = " << word[i] << "\n";
-        // }
-        // void printKey(){
-        //     cout << "\nKey is: ";
-        //     for(int i = 0; i < 32; i++)
-        //         cout << key[i];
-        //     cout << endl;
-        // }
-        // void printPlain(){
-        //     cout << "\nPlain Text: \n";
-        //     print(plain);
-        //     // for(int i = 0; i < 16; i++)
-        //     //     print(plain);
-        //     // cout << endl;
-        // }
+        void print(uint8_t * bytes)
+        {
+            printBox(bytes);
+        }
+        void printWords(){
+            for(int i = 0; i < 60; i++)
+                cout << "Word[" << i << "] = " << word[i] << "\n";
+        }
+        void printKey(){
+            cout << "\nKey is: ";
+            for(int i = 0; i < 32; i++)
+                cout << key[i];
+            cout << endl;
+        }
+        void printPlain(){
+            cout << "\nPlain Text: \n";
+            print(plain);
+            // for(int i = 0; i < 16; i++)
+            //     print(plain);
+            // cout << endl;
+        }
+        void printCurrRoundKey(int rnd){
+            for (int i = 0; i < 16; i++)
+                cout << hex(roundKey[rnd][i]) << " ";
+        }
 };
 
 
@@ -312,22 +320,82 @@ int main(){
 
     AES aes;
 
-    uint8_t plainText[] = {0x32, 0x43, 0xf6, 0xa8, 
-                       0x88, 0x5a, 0x30, 0x8d, 
-                       0x31, 0x31, 0x98, 0xa2, 
-                       0xe0, 0x37, 0x07, 0x34};
+    string plainIn;
+    cout << "Type a plain txt to be encrypted: " << endl;
+    getline(cin, plainIn);
+    int sizeOfPlain =  plainIn.size();
+    short int pureCount = sizeOfPlain/16;
+    short int lastChars = sizeOfPlain - (16*pureCount);
+    uint8_t plainText[pureCount][16];
+    short int tmp = 0;
+    short int count = 0;
+    uint8_t encryptedText[pureCount][16];
 
-    uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
-                     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c, 
-                     0x46, 0x45, 0x6B, 0x38, 0x72, 0x35, 0x6A, 0x4A, 
-                     0x66, 0x63, 0x56, 0x7A, 0x4F, 0x42, 0x75, 0x4C};
-    
+    uint8_t key[] = {0x68, 0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 0x75, 
+                     0x79, 0x68, 0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 
+                     0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 0x75, 0x79,
+                     0x68, 0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 0x75};
+
     aes.setKey(key);
-    aes.setPlain(plainText);
-    // aes.printKey();
-    // aes.printWords();
-    // aes.printPlain();
-    aes.encrypt();
+
+    vector<uint8_t> plainVector(plainIn.begin(), plainIn.end());
+
+    cout << "pure cound = " << pureCount<<endl;
+    cout << "lastChard = " << lastChars<<endl;
+    cout << "Size of plain = " << sizeOfPlain << endl;
+
+    // If text is bigger then 16 characters we need to split it to multiple arrays of 16 values
+    if(sizeOfPlain > 16){
+        for(int i = 0; i < pureCount; i++){
+            for(int j = 0; j < 16; j++){
+                plainText[i][j] = plainVector[tmp];
+                tmp++;
+            }
+        }
+        //Here we add characters that are smaller then 16-digit array to one more array and add zeroes
+        //If we have text with 20 chars we need to put 16 first chars to one array and last 4 chars in the second array and add 16 zeroes to it
+        if(lastChars % 16 != 0){
+            tmp = sizeOfPlain - lastChars;
+            cout << "Tmp: " << tmp << endl;
+            for(int i = 0; i < lastChars; i++)
+                plainText[pureCount][i] = plainVector[tmp+i];
+            for(int i = lastChars+1; i < 16; i++)
+                plainText[pureCount][i] = 0;
+        }
+        //Print
+        for(int i = 0; i < pureCount+1; i++){
+            for(int j = 0; j < 16; j++){
+                cout << plainText[i][j] << " ";    
+            }
+            cout << endl;
+        }
+    }
+    //If we have text smaller or equal 16 we just need to put it in plaintext[0] and add zeroes if it neccessary
+    else if(sizeOfPlain < 16){
+        for(int i = 0; i < sizeOfPlain; i++)
+            plainText[0][i] = plainVector[i];
+        for(int i = lastChars; i < 16; i++)
+            plainText[0][i] = 0;
+        //Print
+        for(int i = 0; i < 16; i++)
+            cout << plainText[0][i] << " ";
+    }
+    
+    
+    for(int i = 0; i <= pureCount; i++){
+        aes.setPlain(plainText[i]);
+        aes.encrypt();
+    }
+
+
+
+
+    // aes.setKey(key);
+    // aes.setPlain(plainText);
+    // // aes.printKey();
+    // // aes.printWords();
+    // // aes.printPlain();
+    // aes.encrypt();
 
     //uint32_t word[60];
     return 0;
