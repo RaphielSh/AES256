@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <cstring>
 using namespace std;
 
 
@@ -107,29 +109,7 @@ class AES{
 
         }
 
-        //  getRoundKey(int round){
-            // uint32_t tmp;
-            // uint8_t a,b,c,d;
 
-            // roundKey
-
-            // for(int i = 0; i < 15; i++){
-            //     for(int j = i; j < i*4+4; j++){
-            //         for(int k = 0; k < 4; k++){
-            //             tmp = word[j];
-            //             a = tmp >> 24;
-            //             b = tmp >> 16 & 0xff;
-            //             c = tmp >> 8 & 0xff;
-            //             d = tmp & 0xff;
-            //             roundKey[i][j][k] = a;
-            //             roundKey[i][j+1][0] = b;
-            //             roundKey[i][j+2][0] = c;
-            //             roundKey[i][j+3][0] = d;
-            //         }
-            //     }
-
-            // }
-        // }
 
         void initRoundKeys(){
             uint32_t tmp;
@@ -320,9 +300,13 @@ int main(){
 
     AES aes;
 
+
+
+    //string vars
     string plainIn;
-    cout << "Type a plain txt to be encrypted: " << endl;
-    getline(cin, plainIn);
+    //cout << "Type a plain txt to be encrypted: " << endl;
+    getline(ifstream("images.jpeg"), plainIn);
+    
     int sizeOfPlain =  plainIn.size();
     short int pureCount = sizeOfPlain/16;
     short int lastChars = sizeOfPlain - (16*pureCount);
@@ -331,18 +315,42 @@ int main(){
     short int count = 0;
     uint8_t encryptedText[pureCount][16];
 
-    uint8_t key[] = {0x68, 0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 0x75, 
-                     0x79, 0x68, 0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 
-                     0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 0x75, 0x79,
-                     0x68, 0x75, 0x79, 0x68, 0x75, 0x79, 0x68, 0x75};
+    //key vars
+
+    string keyIn;
+    cout << "Type a key you want the text to be encrypted with: " << endl;
+    getline(cin, keyIn);
+    vector<uint8_t> keyVector(keyIn.begin(), keyIn.end());
+    uint8_t key[32];
+
+
+    
+
+
+    if(keyIn.length() < 32){
+        cout << "Key must be 32 bit.";
+        return 1;
+    }
+    else if(keyIn.length() > 32){
+        cout << "Key must be 32 bit.";
+        return 1;
+    }
+    else{
+        for(int i = 0; i < 32; i++)
+            key[i] = keyVector[i];
+    }
+
 
     aes.setKey(key);
 
     vector<uint8_t> plainVector(plainIn.begin(), plainIn.end());
 
+
+
     cout << "pure cound = " << pureCount<<endl;
     cout << "lastChard = " << lastChars<<endl;
     cout << "Size of plain = " << sizeOfPlain << endl;
+    cout << "Key = " << key << endl;
 
     // If text is bigger then 16 characters we need to split it to multiple arrays of 16 values
     if(sizeOfPlain > 16){
@@ -387,16 +395,5 @@ int main(){
         aes.encrypt();
     }
 
-
-
-
-    // aes.setKey(key);
-    // aes.setPlain(plainText);
-    // // aes.printKey();
-    // // aes.printWords();
-    // // aes.printPlain();
-    // aes.encrypt();
-
-    //uint32_t word[60];
     return 0;
 }
