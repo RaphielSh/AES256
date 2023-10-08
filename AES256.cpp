@@ -304,15 +304,23 @@ int main(){
 
     //string vars
     string plainIn;
-    //cout << "Type a plain txt to be encrypted: " << endl;
-    getline(ifstream("images.jpeg"), plainIn);
+
+    ifstream infile("images.jpeg", ios::binary | ios::in);    
+    ofstream outfile("images_edited.jpeg", ios::binary|ios::out);
+    char buffer;
+    while(infile >> noskipws >> buffer) plainIn += buffer; 
+    
+
+    // cout << hex << plainIn << endl;
+
+    infile.close();
     
     int sizeOfPlain =  plainIn.size();
     short int pureCount = sizeOfPlain/16;
     short int lastChars = sizeOfPlain - (16*pureCount);
     uint8_t plainText[pureCount][16];
-    short int tmp = 0;
-    short int count = 0;
+    int tmp = 0;
+    int count = 0;
     uint8_t encryptedText[pureCount][16];
 
     //key vars
@@ -343,9 +351,9 @@ int main(){
 
     aes.setKey(key);
 
+    
+
     vector<uint8_t> plainVector(plainIn.begin(), plainIn.end());
-
-
 
     cout << "pure cound = " << pureCount<<endl;
     cout << "lastChard = " << lastChars<<endl;
@@ -390,10 +398,11 @@ int main(){
     }
     
     
+    
     for(int i = 0; i <= pureCount; i++){
         aes.setPlain(plainText[i]);
         aes.encrypt();
     }
-
+    outfile.close();
     return 0;
 }
