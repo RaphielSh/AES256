@@ -18,6 +18,7 @@ class AES{
         const uint16_t reduce = 0b100011011;
         const uint16_t mag = 0b100000000;
         uint8_t plain_m[16];
+        string out;
     public:
         AES(){};
 
@@ -244,9 +245,15 @@ class AES{
             //print(plain);
             //printPlain();
             cout << "\nEncrypted text: " << endl;
-            for(int i = 0; i < 16; i++)
+            for(int i = 0; i < 16; i++){
                 cout << hex(plain[i]) <<  " ";
+                out += plain[i];
+            }
         }
+
+
+        //Getters
+        string getPlain(){return out;}
 
         //Print Part
         std::string hex(unsigned char inchar){
@@ -291,28 +298,17 @@ class AES{
         }
 };
 
-
-
-
-
-
 int main(){
 
     AES aes;
-
-
-
     //string vars
     string plainIn;
-
-    ifstream infile("images.jpeg", ios::binary | ios::in);    
-    ofstream outfile("images_edited.jpeg", ios::binary|ios::out);
+    ifstream infile("test.txt", ios::binary | ios::in);    
+    ofstream outfile("test_edited.txt", ios::binary|ios::out);
     char buffer;
+    //put file in string
     while(infile >> noskipws >> buffer) plainIn += buffer; 
     
-
-    // cout << hex << plainIn << endl;
-
     infile.close();
     
     int sizeOfPlain =  plainIn.size();
@@ -331,10 +327,7 @@ int main(){
     vector<uint8_t> keyVector(keyIn.begin(), keyIn.end());
     uint8_t key[32];
 
-
-    
-
-
+    //Check if key is 32 bit
     if(keyIn.length() < 32){
         cout << "Key must be 32 bit.";
         return 1;
@@ -347,11 +340,6 @@ int main(){
         for(int i = 0; i < 32; i++)
             key[i] = keyVector[i];
     }
-
-
-    aes.setKey(key);
-
-    
 
     vector<uint8_t> plainVector(plainIn.begin(), plainIn.end());
 
@@ -379,12 +367,12 @@ int main(){
                 plainText[pureCount][i] = 0;
         }
         //Print
-        for(int i = 0; i < pureCount+1; i++){
-            for(int j = 0; j < 16; j++){
-                cout << plainText[i][j] << " ";    
-            }
-            cout << endl;
-        }
+        // for(int i = 0; i < pureCount+1; i++){
+        //     for(int j = 0; j < 16; j++){
+        //         cout << plainText[i][j] << " ";    
+        //     }
+        //     cout << endl;
+        // }
     }
     //If we have text smaller or equal 16 we just need to put it in plaintext[0] and add zeroes if it neccessary
     else if(sizeOfPlain < 16){
@@ -393,16 +381,17 @@ int main(){
         for(int i = lastChars; i < 16; i++)
             plainText[0][i] = 0;
         //Print
-        for(int i = 0; i < 16; i++)
-            cout << plainText[0][i] << " ";
+        // for(int i = 0; i < 16; i++)
+        //     cout << plainText[0][i] << " ";
     }
     
     
-    
+    aes.setKey(key);
     for(int i = 0; i <= pureCount; i++){
         aes.setPlain(plainText[i]);
         aes.encrypt();
     }
+    outfile << aes.getPlain();
     outfile.close();
     return 0;
 }
