@@ -10,6 +10,7 @@ using namespace std;
 
 class AES{
     private:
+        //to encrypt
         uint32_t word[60];
         uint8_t key[32];
         uint8_t plain[16];
@@ -17,10 +18,14 @@ class AES{
         short int round = 0;
         const uint16_t reduce = 0b100011011;
         const uint16_t mag = 0b100000000;
-        uint8_t plain_m[16];
+
+        //to decrypt
         string out;
+        uint8_t ecnrypted[16];
     public:
         AES(){};
+
+        //ENCRYPT//
 
         uint8_t sBox(uint8_t byte){
             uint8_t s[256] ={
@@ -147,15 +152,22 @@ class AES{
         }
 
         void keyAdd(){
-            uint8_t tmp;
-            short int count = 0;
-
             for(int i = 0; i < 16; i++){
                 //cout << "   ->plain num = " << hex(plain[i]) << " XOR round key = " << hex(roundKey[round][i]) << endl;
                 plain[i] ^= roundKey[round][i];
                 // cout <<"    End of a key add cycle"<< endl;
             }
         }
+        void savePrev(){
+            for(int i = 0; i < 16; i++)
+                prevBlock[i] = plain[i];
+        }
+        void chainXOR(){
+            for(int i = 0; i < 16; i++){
+                plain[i] ^= prevBlock[i];
+            }
+        }
+
         void subBytes(){
             for(int i = 0; i < 16; i++)
                 plain[i] = sBox(plain[i]);
@@ -225,14 +237,14 @@ class AES{
             //printCurrRoundKey(round);
             //cout << "\nkeyAdd: " << endl;
             keyAdd();
+
             //print(plain);
         }
         void encrypt(){
             round = 0;
             //cout << "First key Add: " << endl;
             keyAdd();
-            //print(plain);
-            round = 1;
+            round++;
             for(int i = 1; i < 14; i++){
                 //cout << "Round " << i << endl;
                 runRound();
@@ -251,6 +263,8 @@ class AES{
             }
         }
 
+        //DECRYPTOR//
+
 
         //Getters
         string getPlain(){return out;}
@@ -263,6 +277,10 @@ class AES{
         }
         void print(uint8_t byte){
             std::cout << hex(byte);
+        }
+        void printInit(){
+            for(int i = 0; i < 16; i++)
+                cout << initVector[i];
         }
         void printBox(uint8_t * bytes)
         {
@@ -302,10 +320,14 @@ int main(){
 
     AES aes;
     //string vars
-    string plainIn;
-    ifstream infile("test.txt", ios::binary | ios::in);    
-    ofstream outfile("test_edited.txt", ios::binary|ios::out);
+    string plainIn, input_file, output_file;
+    cout << "File name" << endl;
+    getline(cin, input_file);
+    output_file = "encrypted_";
+    ifstream infile(input_file, ios::binary | ios::in);    
+    ofstream outfile(output_file + input_file, ios::binary|ios::out);
     char buffer;
+
     //put file in string
     while(infile >> noskipws >> buffer) plainIn += buffer; 
     
@@ -347,6 +369,7 @@ int main(){
     cout << "lastChard = " << lastChars<<endl;
     cout << "Size of plain = " << sizeOfPlain << endl;
     cout << "Key = " << key << endl;
+    aes.printInit();
 
     // If text is bigger then 16 characters we need to split it to multiple arrays of 16 values
     if(sizeOfPlain > 16){
