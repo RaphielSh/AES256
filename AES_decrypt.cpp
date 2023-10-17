@@ -204,13 +204,22 @@ class AES{
         }
 
         void decrypt(){
+            // cout << "Round keys:" << endl;
+            // for(int i = 0; i < 15; i++)
+            //     cout << "RoundKey[" << i << "]" << hex(roundKey[i][0]) << hex(roundKey[i][1]) << hex(roundKey[i][2]) << hex(roundKey[i][3]) << endl; 
+            
             cout << "Before decrypt" << endl;
             print(plain);
             round = 0;
-
+            cout << "key add" << endl;
             invKeyAdd();
+            print(plain);
+            cout << "shift" << endl;
             invShiftRows();
+            print(plain);
+            cout << "invSubBytes" << endl;
             invSubBytes();
+            print(plain);
             round++;
 
             for(int i = 0; i < 14; i++){
@@ -218,10 +227,10 @@ class AES{
                 dectyptRound();
                 round++;
             }
-            cout << "Last 14 round operations:" << endl;
+            cout << "Last 14 round operations(keyadd):" << endl;
             invKeyAdd();
 
-            cout << "\nDecrypted text: " << endl;
+            cout << "\n             ->Decrypted text: " << endl;
             for(int i = 0; i < 16; i++){
                 cout << hex(plain[i]) <<  " ";
                 out += plain[i];
@@ -301,7 +310,7 @@ class AES{
 
         void invKeyAdd(){
             for(int i = 0; i < 16; i++)
-                plain[i] ^= roundKey[14-round][i];
+                plain[i] ^= roundKey[15-round][i];
         }
        
 
