@@ -250,83 +250,63 @@ class AES{
 
         }
         void runRound(){
-            //cout << "\nSubBytes: " << endl;
+            cout << "\nSubBytes: " << endl;
             subBytes();
-            //print(plain);
-            //cout << "\nShiftRows: " << endl;
+            print(plain);
+            cout << "\nShiftRows: " << endl;
             shiftRows();
-            //print(plain);
-            //cout << "\nmix cols: " << endl;
+            print(plain);
+            cout << "\nmix cols: " << endl;
             mixColumns();
-            //print(plain);
-            //cout << "Current round key is: " << endl;
-            //printCurrRoundKey(round);
-            //cout << "\nkeyAdd: " << endl;
+            print(plain);
+            cout << "Current round key is: " << endl;
+            printCurrRoundKey(round);
+            cout << "\nkeyAdd: " << endl;
             keyAdd();
 
-            //print(plain);
+            print(plain);
         }
         void encrypt(){
+            // cout << "Round keys:" << endl;
+            // for(int i = 0; i < 15; i++){
+            //     cout << "RoundKey[" << i << "]" << hex(roundKey[i][0]) << hex(roundKey[i][1]) << hex(roundKey[i][2]) << hex(roundKey[i][3]) << endl; 
+            // }
+
+            cout << "Before encryption" << endl;
+            print(plain);
             round = 0;
             
-            for(int i = 0; i < 16; i++)
-                plain[i] ^= initVector[i];
-            //cout << "First key Add: " << endl;
+            // for(int i = 0; i < 16; i++)
+            //     plain[i] ^= initVector[i];
+            cout << "First key Add: " << endl;
             keyAdd();
-            savePrev();
-            //print(plain);
+            // savePrev();
+            print(plain);
             round++;
             for(int i = 1; i < 14; i++){
                 //cout << "Round " << i << endl;
-                chainXOR();
+                // chainXOR();
                 runRound();
-                savePrev();
+                // savePrev();
                 round++;
             }
-            //cout << "Last 14 round operations:" << endl;
-            chainXOR();
+            cout << "Last 14 round operations:" << endl;
+            // chainXOR();
+            cout << "subBytes" << endl;
             subBytes();
+            print(plain);
+            cout << "shiftRows" << endl;
             shiftRows();
+            print(plain);
+            cout << "keyAdd" << endl;
             keyAdd();
-            //print(plain);
+            print(plain);
             //printPlain();
-            cout << "\nEncrypted text: " << endl;
+            cout << "\n                 ->Encrypted text: " << endl;
             for(int i = 0; i < 16; i++){
                 cout << hex(plain[i]) <<  " ";
                 out += plain[i];
             }
-        }
-
-        //DECRYPTOR//
-
-
-       void invShiftRows(){
-           uint8_t tmp;
-           tmp = encrypted[13];
-           encrypted[13] = encrypted[9];
-           encrypted[9] = encrypted[5];
-           encrypted[5] = encrypted[1];
-           encrypted[1] = tmp;
-
-           tmp = encrypted[14];
-           encrypted[14] = encrypted[6];
-           encrypted[6] = tmp;
-           tmp = encrypted[10];
-           encrypted[10] = encrypted[2];
-           encrypted[2] = tmp;
-
-           tmp = encrypted[3];
-           encrypted[3] = encrypted[7];
-           encrypted[7] = encrypted[11];
-           encrypted[11] = encrypted[15];
-           encrypted[15] = tmp;
-       }
-        void invSubBytes(){
-            for(int i = 0; i < 16; i++)
-                plain[i] = invSBox(plain[i]);
-            }
-        void invMixColumns(){
-
         }
        
 
