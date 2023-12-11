@@ -272,35 +272,35 @@ class AES{
             //     cout << "RoundKey[" << i << "]" << hex(roundKey[i][0]) << hex(roundKey[i][1]) << hex(roundKey[i][2]) << hex(roundKey[i][3]) << endl; 
             // }
 
-            cout << "Before encryption" << endl;
-            print(plain);
+            // cout << "Before encryption" << endl;
+            // print(plain);
             round = 0;
             
-            // for(int i = 0; i < 16; i++)
-            //     plain[i] ^= initVector[i];
-            cout << "First key Add: " << endl;
+            for(int i = 0; i < 16; i++)
+                plain[i] ^= initVector[i];
+            // cout << "First key Add: " << endl;
             keyAdd();
-            // savePrev();
-            print(plain);
+            savePrev();
+            // print(plain);
             round++;
             for(int i = 1; i < 14; i++){
                 //cout << "Round " << i << endl;
-                // chainXOR();
+                chainXOR();
                 runRound();
-                // savePrev();
+                savePrev();
                 round++;
             }
-            cout << "Last 14 round operations:" << endl;
-            // chainXOR();
-            cout << "subBytes" << endl;
+            // cout << "Last 14 round operations:" << endl;
+            chainXOR();
+            // cout << "subBytes" << endl;
             subBytes();
-            print(plain);
-            cout << "shiftRows" << endl;
+            // print(plain);
+            // cout << "shiftRows" << endl;
             shiftRows();
-            print(plain);
-            cout << "keyAdd" << endl;
+            // print(plain);
+            // cout << "keyAdd" << endl;
             keyAdd();
-            print(plain);
+            // print(plain);
             //printPlain();
             cout << "\n                 ->Encrypted text: " << endl;
             for(int i = 0; i < 16; i++){
@@ -445,7 +445,7 @@ int main(){
         // }
     }
     //If we have text smaller or equal 16 we just need to put it in plaintext[0] and add zeroes if it neccessary
-    else if(sizeOfPlain < 16){
+    else{
         for(int i = 0; i < sizeOfPlain; i++)
             plainText[0][i] = plainVector[i];
         for(int i = lastChars; i < 16; i++)
